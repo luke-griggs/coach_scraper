@@ -14,26 +14,34 @@ async function handleSubmit(e: React.FormEvent<HTMLFormElement>){
   const formData = new FormData(e.currentTarget)
 
   const schoolCsv = formData.get('schoolCsv')
-  const sportValue = formData.get('Sport')
-  const genderValue = formData.get('Gender')
+  const sportValue = formData.get('Sport') as string
+  const genderValue = formData.get('Gender') as string
 
 
   var formattedSchoolsArray: string[] = [] // stores the array of schools
 
-  Papa.parse(schoolCsv!, {
-    header: true,
-    skipEmptyLines: true,
-    complete: function (results) {
-      formatResults(results.data as School[])
-    },
-})
-
+  function parseCsv(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      Papa.parse(schoolCsv!, {
+        header: true,
+        skipEmptyLines: true,
+        complete: function (results) {
+          formatResults(results.data as School[]);
+          resolve(); // Signal that parsing is done
+        },
+        error: function (error) {
+          reject(error); // Signal if there’s an error
+        },
+      });
+    });
+  }
+  await parseCsv();
+  
 
   function formatResults(schoolArray: Array<School>){ // formats the parsed csv into an array
     for (var i = 0; i < schoolArray.length; i++){
       formattedSchoolsArray.push(schoolArray[i].name)
     }
-    getURLS();
   }
 
 
@@ -50,13 +58,39 @@ async function handleSubmit(e: React.FormEvent<HTMLFormElement>){
         throw new Error("Failed to fetch from Api");
       }
       const result = await response.json();
-      console.log("API respose: ", result)
+      console.log("HERE ARE THE LINKS: " + result)
+      return result
 
     } catch(error) {
       console.error("Error: ", error)
     }
   }
-  
+  const urls = await getURLS(); // an array of the school urls
+
+
+  async function getCoachData(urls: Array<string>, sport: string, gender: string){
+    const data = {
+      urls,
+      sport,
+      gender
+    }
+
+    try{
+      const response = await fetch("/api/processSites", {
+        method: "POST",
+        headers: {
+          "Content-Type": "Application/json",
+        },
+        body: JSON.stringify(data)
+      })
+      return response
+    } catch(error){
+      console.error("Error: ", error)
+    }
+  }
+
+  const coachData = await getCoachData(urls, sportValue, genderValue)  
+  console.log("coach data: " + coachData);
 }
 
 

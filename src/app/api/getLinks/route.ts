@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from "next/server"
 const key = process.env.PERPLEXITY_KEY ?? ""
 
 export async function POST(request: NextRequest){
+     
      const body = await request.text();
      const schoolArray = JSON.parse(body);
 
@@ -16,7 +17,7 @@ export async function POST(request: NextRequest){
     const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [
         {
           role: "user",
-          content: `I'm going to give you an array of colleges, I want you to find me the urls to the school's athletic staff directory sites and return the urls to me in an array. Here are the schools: ${schoolArray}`,
+          content: `I'm going to give you an array of colleges, your task is to return to me the urls to each of these schools athletic staff directory sites. Your response should only include an array of these urls... nothing else. Here are the schools: ${schoolArray}`,
         },
       ];
 
@@ -26,7 +27,9 @@ export async function POST(request: NextRequest){
             model: "llama-3.1-sonar-small-128k-online"
         });
 
-        return NextResponse.json(response);
+        const urlList = response.choices[0].message.content
+        return NextResponse.json(urlList);
+        
     
     } catch(error) {
         console.error(error);

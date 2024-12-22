@@ -3,13 +3,76 @@
 import React from "react";
 import Papa from "papaparse"
 
+interface School{
+  name: string
+}
+
+
+async function getURLs(schoolsArray: string[]) : Promise<string[]>{
+  const response = await fetch("/api/getLinks", {
+    method: "POST",
+    headers: { "Content-Type": "application/json"},
+    body: JSON.stringify(schoolsArray)
+  })
+
+  if (!response.ok){ throw new Error("Failed to fetch from Api")}
+  return response.json();
+}
+
+
+async function getCoachData(urls: Array<string>, sport: string, gender: string) : Promise<string>{
+  const data = { urls, sport, gender }
+
+  const response = await fetch("/api/processSites", {
+    method: "POST",
+    headers: { "Content-Type": "Application/json"},
+    body: JSON.stringify(data)
+    })
+
+    return response.json()
+  } 
+
+async function sendCsv(csv: any){
+
+    const response = await fetch("api/send", {
+      method: "POST",
+      headers: { "Content-Type": "text/plain"},
+      body: csv
+    })
+    const result = await response.json()
+
+    if (result.success){
+      console.log("file emailed successfully!")
+    } else {
+      console.error('Failed to send CSV:', result.error || 'Unknown error');
+    }
+
+}
+
+function parseCsv(csv: any, schoolsArray: string[]): Promise<void> {
+
+  return new Promise((resolve, reject) => {
+    Papa.parse(csv, {
+      header: true,
+      skipEmptyLines: true,
+      complete: function (results) {
+        const parsedArray = results.data as School[]
+        for (var i = 0; i < parsedArray.length; i++){
+          schoolsArray.push(parsedArray[i].name) // take the results from the parsed csv input and store them in the schoolsArray
+        }
+        resolve(); // Signal that parsing is done
+      },
+      error: function (error) {
+        reject(error); // Signal if there’s an error
+      },
+    });
+  });
+}
+
+
 
 async function handleSubmit(e: React.FormEvent<HTMLFormElement>){
   e.preventDefault()
-
-  interface School{
-    name: string
-  }
 
   const formData = new FormData(e.currentTarget)
 
@@ -20,78 +83,27 @@ async function handleSubmit(e: React.FormEvent<HTMLFormElement>){
 
   var formattedSchoolsArray: string[] = [] // stores the array of schools
 
-  function parseCsv(): Promise<void> {
-    return new Promise((resolve, reject) => {
-      Papa.parse(schoolCsv!, {
-        header: true,
-        skipEmptyLines: true,
-        complete: function (results) {
-          formatResults(results.data as School[]);
-          resolve(); // Signal that parsing is done
-        },
-        error: function (error) {
-          reject(error); // Signal if there’s an error
-        },
-      });
-    });
+  try {
+    // Parse CSV
+    await parseCsv(schoolCsv, formattedSchoolsArray);
+
+    // Get URLs
+    const urls = await getURLs(formattedSchoolsArray);
+
+    // Fetch coach data
+    const coachData = await getCoachData(urls, sportValue, genderValue);
+    console.log("Here is the csv data being returned from getCoachData: " + coachData)
+
+
+    // Send CSV via email
+    await sendCsv(coachData);
+
+    console.log("Workflow completed successfully!");
+  } catch (error) {
+    console.error("An error occurred:", error);
   }
-  await parseCsv();
-  
-
-  function formatResults(schoolArray: Array<School>){ // formats the parsed csv into an array
-    for (var i = 0; i < schoolArray.length; i++){
-      formattedSchoolsArray.push(schoolArray[i].name)
-    }
-  }
-
-
-  async function getURLS(){
-    try{
-      const response = await fetch("/api/getLinks", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formattedSchoolsArray)
-      })
-      if (!response.ok){
-        throw new Error("Failed to fetch from Api");
-      }
-      const result = await response.json();
-      console.log("HERE ARE THE LINKS: " + result)
-      return result
-
-    } catch(error) {
-      console.error("Error: ", error)
-    }
-  }
-  const urls = await getURLS(); // an array of the school urls
-
-
-  async function getCoachData(urls: Array<string>, sport: string, gender: string){
-    const data = {
-      urls,
-      sport,
-      gender
-    }
-
-    try{
-      const response = await fetch("/api/processSites", {
-        method: "POST",
-        headers: {
-          "Content-Type": "Application/json",
-        },
-        body: JSON.stringify(data)
-      })
-      return response
-    } catch(error){
-      console.error("Error: ", error)
-    }
-  }
-
-  const coachData = await getCoachData(urls, sportValue, genderValue)  
-  console.log("coach data: " + coachData);
 }
+  
 
 
 const UploadForm = () => {

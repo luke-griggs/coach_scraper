@@ -16,7 +16,8 @@
     "puppeteer": "^23.10.4",
     "puppeteer-extra": "^3.3.6",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "resend": "^4.0.1"
   },
   "devDependencies": {
     "@types/node": "^20",

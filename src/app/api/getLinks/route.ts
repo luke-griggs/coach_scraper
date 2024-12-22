@@ -1,38 +1,52 @@
-import OpenAI from "openai"
-import { NextRequest, NextResponse } from "next/server"
+import OpenAI from "openai";
+import { NextRequest, NextResponse } from "next/server";
+import puppeteer from "puppeteer-extra";
+import { Browser } from "puppeteer";
 
 
-const key = process.env.PERPLEXITY_KEY ?? ""
+export async function POST(request: NextRequest) {
+  const body = await request.text();
+  const schools: Array<string> = JSON.parse(body);
 
-export async function POST(request: NextRequest){
-     
-     const body = await request.text();
-     const schoolArray = JSON.parse(body);
+  async function getUrls(schoolArray: Array<string>) {
+    const res = []; // Array to store results
 
-    const client = new OpenAI({
-        apiKey: key,
-        baseURL: "https://api.perplexity.ai",
-    })
+    for (const school of schoolArray) {
+      const browser = await puppeteer.launch(); // Launch browser
+      const page = await browser.newPage();
 
-    const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [
-        {
-          role: "user",
-          content: `I'm going to give you an array of colleges, your task is to return to me the urls to each of these schools athletic staff directory sites. Your response should only include an array of these urls... nothing else. Here are the schools: ${schoolArray}`,
-        },
-      ];
+      const schoolDirectory = `${school} athletic staff directory`;
 
-    try{
-        const response = await client.chat.completions.create({
-            messages,
-            model: "llama-3.1-sonar-small-128k-online"
+      try {
+        await page.goto(
+          `https://www.google.com/search?q=${encodeURIComponent(
+            schoolDirectory
+          )}`,
+          { waitUntil: "networkidle0", timeout: 60000 }
+        );
+
+        // Wait for search results to load
+        await page.waitForSelector("a");
+
+        // Grab the first result link
+        const firstLink = await page.evaluate(() => {
+            const result = document.querySelector('div#search a'); // Select the first search result
+            return result ? result.getAttribute("href") : null;   
         });
 
-        const urlList = response.choices[0].message.content
-        return NextResponse.json(urlList);
-        
-    
-    } catch(error) {
+        res.push(firstLink); // Add the result to the array
+        console.log("First Link:", firstLink);
+
+        await browser.close(); // Close the browser
+      } catch (error) {
         console.error(error);
-        return NextResponse.json({error: "something went wrong while getting links"})
+      }
     }
+    console.log("HERE ARE THE LINKS: " + res)
+    return res; // Return the array of results
+  }
+
+  const result = await getUrls(schools);
+
+  return NextResponse.json(result);
 }

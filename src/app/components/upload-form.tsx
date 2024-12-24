@@ -1,12 +1,28 @@
 "use client"
 
-import React from "react";
+
+import React, { useState } from "react"
 import Papa from "papaparse"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Button } from "@/components/ui/button"
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select"
+import { IoBaseballOutline } from "react-icons/io5";
+import { FaBasketball } from "react-icons/fa6";
+
+
+
+
 
 interface School{
   name: string
 }
-
 
 async function getURLs(schoolsArray: string[]) : Promise<string[]>{
   const response = await fetch("/api/getLinks", {
@@ -107,29 +123,71 @@ async function handleSubmit(e: React.FormEvent<HTMLFormElement>){
 
 
 const UploadForm = () => {
+  const [sport, setSport] = useState("")
+  const [gender, setGender] = useState("")
+
   return (
-    <div className="w-full h-auto mx-auto">
-      <form onSubmit={handleSubmit} action="submit">
-        <div className="flex-col">
-          <div>
-            <input id="schoolCsv" name="schoolCsv" type="file" accept="csv" required/>
-            <select name="Sport" id="Sport" className="text-black" required>
-              <option value="Basketball">Basketball</option>
-              <option value="Football">Football</option>
-              <option value="Baseball">Baseball</option>
-            </select>
-            <select name="Gender" id="Gender" className="text-black" required>
-              <option value="Mens">Mens</option>
-              <option value="Womens">Womens</option>
-            </select>
-          </div>
-          <div className="pt-4">
-            <button className="bg-white text-black p-2 rounded-md hover:bg-gray-200 duration-200" type="submit">submit</button>
-          </div>
-        </div>
-      </form>
-    </div>
-  );
-};
+    <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+      {/* CSV file upload */}
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="schoolCsv" className="text-sm font-semibold">
+          Upload CSV
+        </Label>
+        <Input
+          id="schoolCsv"
+          name="schoolCsv"
+          type="file"
+          accept="text/csv"
+          required
+        />
+        <p className="text-xs text-slate-400">
+          Please upload a .csv file containing the list of schools.
+        </p>
+      </div>
+
+      {/* Sport Select */}
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="sport" className="text-sm font-semibold">
+          Select Sport
+        </Label>
+        <Select value={sport} onValueChange={setSport}>
+          <SelectTrigger id="sport" name="sport" className="w-[200px]">
+            <SelectValue placeholder="Select a sport" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="Baseball"><div className="flex items-center gap-2"><IoBaseballOutline />Baseball </div></SelectItem>
+            <SelectItem value="Football"><div className="flex items-center gap-2"><IoBaseballOutline />Football </div></SelectItem>
+            <SelectItem value="Basketball"><div className="flex items-center gap-2"><FaBasketball /> Basketball</div></SelectItem>
+            <SelectItem value="Softball"><div className="flex items-center gap-2"><FaBasketball /> Softball</div></SelectItem>
+            <SelectItem value="Soccer"><div className="flex items-center gap-2"><FaBasketball /> Soccer</div></SelectItem>
+            <SelectItem value="Track"><div className="flex items-center gap-2"><IoBaseballOutline />Track</div></SelectItem>
+            <SelectItem value="Hockey"><div className="flex items-center gap-2"><IoBaseballOutline />Hockey </div></SelectItem>            
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Gender Select */}
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="gender" className="text-sm font-semibold">
+          Select Gender
+        </Label>
+        <Select value={gender} onValueChange={setGender}>
+          <SelectTrigger id="gender" name="gender" className="w-[200px]">
+            <SelectValue placeholder="Select a gender" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="Mens">Mens</SelectItem>
+            <SelectItem value="Womens">Womens</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Submit button */}
+      <Button variant="default" type="submit" className="w-full sm:w-auto">
+        Submit
+      </Button>
+    </form>
+  )
+}
 
 export default UploadForm;

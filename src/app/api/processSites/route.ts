@@ -13,19 +13,6 @@ const OPENAI_RESPONSE_TIMEOUT = 300000; // 5 minutes
 let browser: Browser
 
 
-// need to add to global csv
-async function jsonToCsv(jsonData: Array<Record<string, any>>){ // parses json data into a csv
-    var csv = ""
-    const headers = Object.keys(jsonData[0]);
-    csv += headers.join("\n");
-
-    jsonData.forEach(object => {
-        headers.map(header => 
-            csv += object[header]
-        )
-    })
-}
-
 async function scrapeWebsite(url: string) {
     browser = await puppeteer.launch()
     const page = await browser.newPage();
@@ -63,7 +50,6 @@ async function scrapeWebsite(url: string) {
 }
 
 async function processCoachesSite(coachesSite: string, assistantId: string) {
-    var csv = ""
     if (!coachesSite) {
         console.log("No coaches site available for processing.");
         return;
@@ -120,8 +106,8 @@ async function processCoachesSite(coachesSite: string, assistantId: string) {
         if (lastAssistantMessage && lastAssistantMessage.content[0].type == "text") {
             console.log("Extracted and structured data:");
             const extractedData = lastAssistantMessage.content[0].text.value;
-            console.log(extractedData);
             extractedData.replace(/```json\n?|```/g, ''); // to get rid of the weird ``` that gpt was adding to responses
+            console.log(extractedData);
             return JSON.parse(extractedData)
         } else {
             console.log("No response from the assistant.");
@@ -138,7 +124,7 @@ async function processCoachesSite(coachesSite: string, assistantId: string) {
 
 }
 
-async function getCoachContacts(outputFilename: string, urlArray: Array<string>, sport: string, gender: string) {
+async function getCoachContacts(urlArray: Array<string>, sport: string, gender: string) {
     var csv = ""
 
     const schoolUrlArray = urlArray;
@@ -149,25 +135,43 @@ async function getCoachContacts(outputFilename: string, urlArray: Array<string>,
     const assistant = await openai.beta.assistants.create({
         name: "University Athletic Department Data Extractor",
         instructions: `
-            I need you to filter through this data for me and find the information for any coach or recruiting role for ${gender}'s ${sport} do NOT include any operations/social media/creative personel. I need you to find the following information for each coach/recruiting personel: 
-            first name, last name, email, twitter/x, coaches title(this should be just their title, don't include the school/sport). 
-    
-            Return it to me as an array of comma separated JSONs that adhere to the following format, using the same fields. To be clear, your response should contain nothing except the jsons:
-            {
-                "first_name": "John",
-                "last_name": "Doe",
-                "email": johndoe@email.com,
-                "twitter": null,
-                "title": head coach
-            },
-            {
-                "first_name": "Tim",
-                "last_name": "Jones",
-                "email": tjones@email.com,
-                "twitter": jones52,
-                "title: assistant coach
-            }
-            If the data that you're filtering thorugh doesn't include a certain field, then leave the field as an empty string. As a reminder, I only want the data for coaches and recruiting personel for ${gender}'s ${sport}. Do not include the random triple backtick and json in the response
+            I need you to filter through this data and extract information for the coaches and recruiting coordinators for ${gender}'s ${sport}. Do NOT include any operations, social media, or creative personnel.
+
+For each relevant individual, return the following information:
+
+first_name: The coach's first name. If the first and last names are combined, split them logically (e.g., "John Doe" becomes first_name: John, last_name: Doe).
+last_name: The coach's last name.
+email: The email address, or leave as an empty string if not available.
+twitter: The coach's Twitter/X handle, or an empty string if not available
+title: The coach's title (e.g., "head coach" or "assistant coach"). Do not include the school or sport in this field.
+Output format:
+Do NOT include any additional formatting, such as triple backticks, json tags, or any text outside of the JSON array itself.
+Return the data as an ARRAY of valid JSON objects. Each object should contain exactly these fields: first_name, last_name, email, twitter, title. Each JSON should therefore contain exactly 5 fields.
+
+Example output:
+
+[
+    {
+        "first_name": "John",
+        "last_name": "Doe",
+        "email": "johndoe@email.com",
+        "twitter": null,
+        "title": "head coach"
+    },
+    {
+        "first_name": "Tim",
+        "last_name": "Jones",
+        "email": "tjones@email.com",
+        "twitter": "jones52",
+        "title": "assistant coach"
+    }
+]
+Notes:
+
+Ensure the output is strictly valid JSON. Any extraneous characters, like triple backticks or additional formatting, will invalidate the response.
+Leave any missing fields as an empty string ("").
+Ensure the output is strictly valid JSON. Do not include stray commas or any non-JSON content.
+Only include data for coaches and recruiting personnel for ${gender}'s ${sport}.
         `,   
         model: "gpt-4o-mini",
     });
@@ -175,8 +179,13 @@ async function getCoachContacts(outputFilename: string, urlArray: Array<string>,
 
     const headers = ["first_name", "last_name", "email", "twitter", "title"]
     csv += headers.join(",") + "\n";
-    for (let i = 0; i < schoolUrlArray.length; i++) {
+    for (let i = 0; i < schoolUrlArray.length - 1; i++) {
         console.log("attempting to process site", schoolUrlArray[i]);
+
+        if(!schoolUrlArray[i]){
+            console.log("this link was not found")
+            break;
+        }
         const site = schoolUrlArray[i];
 
         const coachData = await processCoachesSite(site, assistant.id); 
@@ -197,6 +206,6 @@ async function getCoachContacts(outputFilename: string, urlArray: Array<string>,
 
 export async function POST(request: NextRequest){
     const data = await request.json()
-    const csv = await getCoachContacts("", data.urls, data.sport, data.gender)
+    const csv = await getCoachContacts(data.urls, data.sport, data.gender)
     return NextResponse.json(csv)
 }

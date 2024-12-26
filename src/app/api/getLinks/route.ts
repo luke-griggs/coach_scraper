@@ -10,11 +10,10 @@ export async function POST(request: NextRequest) {
 
   async function getUrls(schoolArray: Array<string>) {
     const res = []; // Array to store results
+    const browser = await puppeteer.launch(); // Launch browser
 
     for (const school of schoolArray) {
-      const browser = await puppeteer.launch(); // Launch browser
       const page = await browser.newPage();
-
       const schoolDirectory = `${school} athletic staff directory`;
 
       try {
@@ -30,18 +29,19 @@ export async function POST(request: NextRequest) {
 
         // Grab the first result link
         const firstLink = await page.evaluate(() => {
-            const result = document.querySelector('div#search a'); // Select the first search result
-            return result ? result.getAttribute("href") : null;   
+            const result = document.querySelector('div#search a'); // Select the first search result. use .querySelector('div#search a') for google
+            return result ? result.getAttribute("href") : "";   
         });
 
         res.push(firstLink); // Add the result to the array
         console.log("First Link:", firstLink);
 
-        await browser.close(); // Close the browser
+        await page.close(); // Close the browser
       } catch (error) {
         console.error(error);
       }
     }
+    browser.close()
     console.log("HERE ARE THE LINKS: " + res)
     return res; // Return the array of results
   }

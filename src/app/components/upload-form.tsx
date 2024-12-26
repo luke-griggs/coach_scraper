@@ -13,9 +13,15 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select"
-import { IoBaseballOutline } from "react-icons/io5";
 import { FaBasketball } from "react-icons/fa6";
-
+import { FaBaseball } from "react-icons/fa6";
+import { FaFootballBall } from "react-icons/fa";
+import { IoIosBaseball } from "react-icons/io";
+import { FaVolleyballBall } from "react-icons/fa";
+import { IoFootball } from "react-icons/io5";
+import { FaRunning } from "react-icons/fa";
+import { MdOutlineSportsHockey } from "react-icons/md";
+import { GiSoccerBall } from "react-icons/gi";
 
 
 
@@ -93,8 +99,8 @@ async function handleSubmit(e: React.FormEvent<HTMLFormElement>){
   const formData = new FormData(e.currentTarget)
 
   const schoolCsv = formData.get('schoolCsv')
-  const sportValue = formData.get('Sport') as string
-  const genderValue = formData.get('Gender') as string
+  const sportValue = formData.get('sport') as string
+  const genderValue = formData.get('gender') as string
 
 
   var formattedSchoolsArray: string[] = [] // stores the array of schools
@@ -105,6 +111,8 @@ async function handleSubmit(e: React.FormEvent<HTMLFormElement>){
 
     // Get URLs
     const urls = await getURLs(formattedSchoolsArray);
+
+    console.log("HERE IS THE SPORT AND GENDER: " + sportValue + " and " + genderValue)
 
     // Fetch coach data
     const coachData = await getCoachData(urls, sportValue, genderValue);
@@ -150,18 +158,19 @@ const UploadForm = () => {
         <Label htmlFor="sport" className="text-sm font-semibold">
           Select Sport
         </Label>
-        <Select value={sport} onValueChange={setSport}>
+        <Select name="sport" value={sport} onValueChange={setSport}>
           <SelectTrigger id="sport" name="sport" className="w-[200px]">
             <SelectValue placeholder="Select a sport" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="Baseball"><div className="flex items-center gap-2"><IoBaseballOutline />Baseball </div></SelectItem>
-            <SelectItem value="Football"><div className="flex items-center gap-2"><IoBaseballOutline />Football </div></SelectItem>
+            <SelectItem value="Baseball"><div className="flex items-center gap-2"><FaBaseball />Baseball </div></SelectItem>
+            <SelectItem value="Football"><div className="flex items-center gap-2"><FaFootballBall />Football </div></SelectItem>
             <SelectItem value="Basketball"><div className="flex items-center gap-2"><FaBasketball /> Basketball</div></SelectItem>
-            <SelectItem value="Softball"><div className="flex items-center gap-2"><FaBasketball /> Softball</div></SelectItem>
-            <SelectItem value="Soccer"><div className="flex items-center gap-2"><FaBasketball /> Soccer</div></SelectItem>
-            <SelectItem value="Track"><div className="flex items-center gap-2"><IoBaseballOutline />Track</div></SelectItem>
-            <SelectItem value="Hockey"><div className="flex items-center gap-2"><IoBaseballOutline />Hockey </div></SelectItem>            
+            <SelectItem value="Softball"><div className="flex items-center gap-2"><IoIosBaseball /> Softball</div></SelectItem>
+            <SelectItem value="Soccer"><div className="flex items-center gap-2"><GiSoccerBall /> Soccer</div></SelectItem>
+            <SelectItem value="Volleyball"><div className="flex items-center gap-2"><FaVolleyballBall />Volleyball</div></SelectItem>
+            <SelectItem value="Track"><div className="flex items-center gap-2"><FaRunning />Track</div></SelectItem>
+            <SelectItem value="Hockey"><div className="flex items-center gap-2"><MdOutlineSportsHockey />Hockey </div></SelectItem>            
           </SelectContent>
         </Select>
       </div>
@@ -171,7 +180,7 @@ const UploadForm = () => {
         <Label htmlFor="gender" className="text-sm font-semibold">
           Select Gender
         </Label>
-        <Select value={gender} onValueChange={setGender}>
+        <Select name="gender" value={gender} onValueChange={setGender}>
           <SelectTrigger id="gender" name="gender" className="w-[200px]">
             <SelectValue placeholder="Select a gender" />
           </SelectTrigger>

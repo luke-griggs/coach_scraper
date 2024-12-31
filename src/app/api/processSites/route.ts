@@ -127,6 +127,9 @@ async function processCoachesSite(coachesSite: string, assistantId: string) {
       const extractedData = lastAssistantMessage.content[0].text.value;
       extractedData.replace(/```json\n?|```/g, ""); // to get rid of the weird ``` that gpt was adding to responses
       console.log(extractedData);
+
+      const data = JSON.parse(extractedData)
+      if (data.first_name)
       return JSON.parse(extractedData);
     } else {
       console.log("No response from the assistant.");
@@ -173,6 +176,7 @@ async function getCoachContacts(
     Output format:
     Do NOT include any additional formatting, such as triple backticks, json tags, or any text outside of the JSON array itself.
     Return the data as an ARRAY of valid JSON objects. Each object should contain exactly these 6 fields: first_name, last_name, email, twitter, title, school. Each JSON should therefore contain exactly 6 fields.
+    No field should contain commas. If you need you put a comma due to someone having multiple roles, use a / instead
     
     Example output:
     
@@ -225,6 +229,8 @@ async function getCoachContacts(
       const site = schoolUrlArray[i];
 
       const coachData = await processCoachesSite(site, assistant.id);
+
+      //rescrape full athletic directory if 
 
       coachData.forEach((object: Record<string, any>) => {
         const values = headers.map((header: string) => object[header]);

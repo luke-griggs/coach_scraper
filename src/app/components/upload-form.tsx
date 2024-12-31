@@ -29,11 +29,13 @@ interface School{
 }
 
 
-async function getURLs(schoolsArray: string[]) : Promise<string[]>{
+async function getURLs(schoolArray: string[], sport: string, gender: string) : Promise<string[]>{
+  const data = { schoolArray, sport, gender }
+
   const response = await fetch("/api/getLinks", {
     method: "POST",
     headers: { "Content-Type": "application/json"},
-    body: JSON.stringify(schoolsArray)
+    body: JSON.stringify(data)
   })
 
   if (!response.ok){ throw new Error("Failed to fetch from Api")}
@@ -74,12 +76,12 @@ function parseCsv(csv: any, schoolsArray: string[]): Promise<void> {
 
   return new Promise((resolve, reject) => {
     Papa.parse(csv, {
-      header: true,
+      header: false,
       skipEmptyLines: true,
       complete: function (results) {
-        const parsedArray = results.data as School[]
-        for (var i = 0; i < parsedArray.length; i++){
-          schoolsArray.push(parsedArray[i].school) // take the results from the parsed csv input and store them in the schoolsArray
+        const parsedArray = results.data as Array<Array<string>>
+        for (var i = 1; i < parsedArray.length; i++){ //start iteration at 1 to skip the header row
+          schoolsArray.push(parsedArray[i][0]) // take the results from the parsed csv input and store them in the schoolsArray
         }
         toast.success('Form submitted successfully', {
           position: "bottom-right",
@@ -138,7 +140,7 @@ async function handleSubmit(e: React.FormEvent<HTMLFormElement>){
     await parseCsv(schoolCsv, formattedSchoolsArray);
 
     // Get URLs
-    const urls = await getURLs(formattedSchoolsArray);
+    const urls = await getURLs(formattedSchoolsArray, sportValue, genderValue);
 
     console.log("HERE IS THE SPORT AND GENDER: " + sportValue + " and " + genderValue)
 

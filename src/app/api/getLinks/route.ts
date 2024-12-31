@@ -5,15 +5,15 @@ import puppeteer from "puppeteer-extra";
 export async function POST(request: NextRequest) {
 
   const body = await request.text();
-  const schools: Array<string> = JSON.parse(body);
+  const data = JSON.parse(body);
 
   async function getUrls(schoolArray: Array<string>) {
     const res = []; // Array to store results
     const browser = await puppeteer.launch(); // Launch browser
 
-    for (const school of schoolArray) {
+    for (const school of data.schoolArray) {
       const page = await browser.newPage();
-      const schoolDirectory = `${school} athletic staff directory`;
+      const schoolDirectory = `${school} ${data.gender} ${data.sport} staff`;
 
       try {
         await page.goto(
@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
     return res; // Return the array of results
   }
 
-  const result = await getUrls(schools);
+  const result = await getUrls(data);
 
   return NextResponse.json(result);
 }

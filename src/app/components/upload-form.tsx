@@ -22,13 +22,12 @@ import { IoFootball } from "react-icons/io5";
 import { FaRunning } from "react-icons/fa";
 import { MdOutlineSportsHockey } from "react-icons/md";
 import { GiSoccerBall } from "react-icons/gi";
-
-
-
+import toast from "react-hot-toast"
 
 interface School{
   school: string
 }
+
 
 async function getURLs(schoolsArray: string[]) : Promise<string[]>{
   const response = await fetch("/api/getLinks", {
@@ -82,9 +81,38 @@ function parseCsv(csv: any, schoolsArray: string[]): Promise<void> {
         for (var i = 0; i < parsedArray.length; i++){
           schoolsArray.push(parsedArray[i].school) // take the results from the parsed csv input and store them in the schoolsArray
         }
+        toast.success('Form submitted successfully', {
+          position: "bottom-right",
+          duration: 6000,
+          style: {
+            backgroundColor: "#090909",
+            border: '1px solid #FFFFFF',
+            padding: '16px',
+            color: '#FFFFFF',
+          },
+          iconTheme: {
+            primary: '#090909',
+            secondary: '#FFFAEE',
+          },
+        });
+    
         resolve(); // Signal that parsing is done
       },
       error: function (error) {
+        toast.error('could not parse csv', {
+          position: "bottom-right",
+          duration: 6000,
+          style: {
+            backgroundColor: "#090909",
+            border: '1px solid #FFFFFF',
+            padding: '16px',
+            color: '#FFFFFF',
+          },
+          iconTheme: {
+            primary: '#090909',
+            secondary: '#FFFAEE',
+          },
+        });
         reject(error); // Signal if there’s an error
       },
     });
@@ -158,7 +186,7 @@ const UploadForm = () => {
         <Label htmlFor="sport" className="text-sm font-semibold">
           Select Sport
         </Label>
-        <Select name="sport" value={sport} onValueChange={setSport}>
+        <Select name="sport" value={sport} onValueChange={setSport} required>
           <SelectTrigger id="sport" name="sport" className="w-[200px]">
             <SelectValue placeholder="Select a sport" />
           </SelectTrigger>
@@ -180,7 +208,7 @@ const UploadForm = () => {
         <Label htmlFor="gender" className="text-sm font-semibold">
           Select Gender
         </Label>
-        <Select name="gender" value={gender} onValueChange={setGender}>
+        <Select name="gender" value={gender} onValueChange={setGender} required>
           <SelectTrigger id="gender" name="gender" className="w-[200px]">
             <SelectValue placeholder="Select a gender" />
           </SelectTrigger>

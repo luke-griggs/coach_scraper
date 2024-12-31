@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/card"
 
 import UploadForm from "@/app/components/upload-form"
+import { ModeToggle } from "@/components/ui/theme-toggle"
 
 export default function DashboardPage() {
   return (
@@ -19,15 +20,15 @@ export default function DashboardPage() {
       <main className="w-full max-w-2xl mx-auto text-white">
         {/* Page Heading */}
         <div className="mb-8 text-center space-y-2">
-          <h1 className="text-3xl font-bold sm:text-4xl">College Coaches Scraper</h1>
-          <p className="text-sm text-slate-300 sm:text-base">
+          <h1 className="text-3xl font-bold sm:text-4xl text-black dark:text-white">College Coaches Scraper</h1>
+          <p className="text-sm text-gray-700 sm:text-base dark:text-slate-300">
             Upload a CSV with a list of schools, choose your sport and gender,
-            and you&apos;ll recieve an email containing the resulting coach data when the scraping is complete.
+            and you&apos;ll receive an email containing the resulting coach data when the scraping is complete.
           </p>
         </div>
 
         {/* Card Container */}
-        <Card className="shadow-lg">
+        <Card className="shadow-lg mb-4">
           <CardHeader>
             <CardTitle className="text-lg sm:text-xl">Get Started</CardTitle>
             <CardDescription className="text-slate-400">
@@ -40,9 +41,10 @@ export default function DashboardPage() {
           </CardContent>
 
           <CardFooter className="text-sm text-slate-400">
-            you&apos;ll recieve the processed CSV to your email once complete.
+            you&apos;ll receive the processed CSV to your email once complete.
           </CardFooter>
         </Card>
+        <ModeToggle />
       </main>
     </div>
   )

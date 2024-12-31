@@ -1,10 +1,9 @@
 import OpenAI from "openai";
 import { NextRequest, NextResponse } from "next/server";
 import puppeteer from "puppeteer-extra";
-import { Browser } from "puppeteer";
-
 
 export async function POST(request: NextRequest) {
+
   const body = await request.text();
   const schools: Array<string> = JSON.parse(body);
 
@@ -18,18 +17,16 @@ export async function POST(request: NextRequest) {
 
       try {
         await page.goto(
-          `https://www.google.com/search?q=${encodeURIComponent(
-            schoolDirectory
-          )}`,
-          { waitUntil: "networkidle0", timeout: 60000 }
+        `https://duckduckgo.com/?q=${encodeURIComponent(schoolDirectory)}`,
+          { waitUntil: "domcontentloaded", timeout: 60000 }
         );
 
         // Wait for search results to load
-        await page.waitForSelector("a");
+        await page.waitForSelector('[data-testid="result-title-a"]');
 
         // Grab the first result link
         const firstLink = await page.evaluate(() => {
-            const result = document.querySelector('div#search a'); // Select the first search result. use .querySelector('div#search a') for google
+            const result = document.querySelector('[data-testid="result-title-a"]'); // Select the first search result. use .querySelector('div#search a') for google
             return result ? result.getAttribute("href") : "";   
         });
 

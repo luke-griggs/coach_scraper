@@ -27,7 +27,7 @@ import { GiSoccerBall } from "react-icons/gi";
 
 
 interface School{
-  name: string
+  school: string
 }
 
 async function getURLs(schoolsArray: string[]) : Promise<string[]>{
@@ -80,7 +80,7 @@ function parseCsv(csv: any, schoolsArray: string[]): Promise<void> {
       complete: function (results) {
         const parsedArray = results.data as School[]
         for (var i = 0; i < parsedArray.length; i++){
-          schoolsArray.push(parsedArray[i].name) // take the results from the parsed csv input and store them in the schoolsArray
+          schoolsArray.push(parsedArray[i].school) // take the results from the parsed csv input and store them in the schoolsArray
         }
         resolve(); // Signal that parsing is done
       },
@@ -145,7 +145,7 @@ const UploadForm = () => {
           id="schoolCsv"
           name="schoolCsv"
           type="file"
-          accept="text/csv"
+          accept="csv"
           required
         />
         <p className="text-xs text-slate-400">

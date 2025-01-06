@@ -45,7 +45,7 @@ async function scrapeWebsite(url: string) {
     return bodyText;
   } catch (error) {
     await page.close();
-    console.log("an error occurred while scraping")
+    console.error("an error occurred while scraping", error)
     return "error"
   }
 }
@@ -196,10 +196,9 @@ async function getCoachContacts(
     email: The email address, or leave as an empty string if not available.
     twitter: The coach's Twitter/X handle, or an empty string if not available
     title: The coach's title (e.g., "head coach" or "assistant coach"). Do not include the school or sport in this field.
-    school: The name of the college
     Output format:
     Do NOT include any additional formatting, such as triple backticks, json tags, or any text outside of the JSON array itself.
-    Return the data as an ARRAY of valid JSON objects. Each object should contain exactly these 6 fields: first_name, last_name, email, twitter, title, school. Each JSON should therefore contain exactly 6 fields.
+    Return the data as an ARRAY of valid JSON objects. Each object should contain exactly these 5 fields: first_name, last_name, email, twitter, title. Each JSON should therefore contain exactly 5 fields.
     No field should contain commas. If you need you put a comma due to someone having multiple roles, use a / instead
     
     Example output:
@@ -211,7 +210,6 @@ async function getCoachContacts(
             "email": "johndoe@email.com",
             "twitter": null,
             "title": "head coach",
-            "school": "Boston College"
         },
         {
             "first_name": "Tim",
@@ -219,7 +217,6 @@ async function getCoachContacts(
             "email": "tjones@email.com",
             "twitter": "jones52",
             "title": "assistant coach",
-            "school": "Boston College"
         }
     ]
     Notes:
@@ -227,8 +224,8 @@ async function getCoachContacts(
     Ensure the output is strictly valid JSON. Any extraneous characters, like triple backticks or additional formatting, will invalidate the response.
     Leave any missing fields as an empty string ("").
     Ensure the output is strictly valid JSON. Do not include stray commas or any non-JSON content.
-    Any personnel who's title contains a comma should be ignored. For example someone with the title "coordinator, player development" should NOT be included
-    Only include data for coaches and recruiting personnel for ${gender}'s ${sport}.
+    Any personnel who's title contains a comma should be ignored. For example someone with the title "coordinator, player development, etc." should NOT be included
+    Only include data for COACHES and RECRUITING PERSONNEL for ${gender}'s ${sport}.
             `,
       model: "gpt-4o-mini",
     });
@@ -240,15 +237,14 @@ async function getCoachContacts(
       "email",
       "twitter",
       "title",
-      "school",
     ];
-    csv += headers.join(",") + "\n";
+    csv += headers.join(",") + "," + "school" + "\n"; // add school afterwards so that it's not part of headers. This allows us to append the school name based on the users csv instead of chatgpt
     for (let i = 0; i < schoolUrlArray.length; i++) { // schoolUrlArray is an array of arrays so that we can keep track of the school name that corresponds to the link in case we need to scrape the full directory due to insufficient information
       console.log("attempting to process site", schoolUrlArray[i][1]);
 
       if (!schoolUrlArray[i][1]) {
         console.log("this link was not found");
-        break;
+        continue;
       }
       const site = schoolUrlArray[i][1];
       const schoolName = schoolUrlArray[i][0];
@@ -267,15 +263,19 @@ async function getCoachContacts(
         }
       }
   
-       if(!coachData[0] || missing_email_count > 1 || !coachData[0]["email"]) { // scrape full athletic directory if we don't get any data back or if more than 1 coach email is missing
+       if(!coachData[0] || missing_email_count > 1) { // scrape full athletic directory if we don't get any data back or if more than 1 coach email is missing
           console.log("insufficient info, scraping full directory for " + schoolName)
           const url = await urlHelper(schoolName)
             if (url) {
               const coachData = await processCoachesSite(url, assistant.id);
-              coachData.forEach((object: Record<string, any>) => {
-                const values = headers.map((header: string) => object[header]);
-                csv += values.join(",") + "\n";
-              });
+              if (!coachData[0]){ // if the coach data is still empty after checking the full directory, then add an error row to the csv
+                csv += `SCRAPE_ERR,,,,,${schoolName}` + "\n"
+              } else {
+                coachData.forEach((object: Record<string, any>) => {
+                  const values = headers.map((header: string) => object[header]);
+                  csv += values.join(",") + "," + schoolName + "\n";
+                });
+              }             
             } else {
               console.error("URL is undefined for school: " + schoolName);
             }
@@ -283,7 +283,7 @@ async function getCoachContacts(
       } else if (coachData[0]["email"]){ // could make this more thorough, maybe check if all coach info is missing. 
         coachData.forEach((object: Record<string, any>) => {
           const values = headers.map((header: string) => object[header]);
-          csv += values.join(",") + "\n";
+          csv += values.join(",") + "," + schoolName + "\n"; // append the name of school based on the college of the current iteration
         });
       }
     }

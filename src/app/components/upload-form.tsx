@@ -18,7 +18,6 @@ import { FaBaseball } from "react-icons/fa6";
 import { FaFootballBall } from "react-icons/fa";
 import { IoIosBaseball } from "react-icons/io";
 import { FaVolleyballBall } from "react-icons/fa";
-import { IoFootball } from "react-icons/io5";
 import { FaRunning } from "react-icons/fa";
 import { MdOutlineSportsHockey } from "react-icons/md";
 import { GiSoccerBall } from "react-icons/gi";
@@ -72,8 +71,9 @@ async function sendCsv(csv: any){
 }
 
 function parseCsv(csv: any, schoolsArray: string[]): Promise<void> {
-
+  csv.name
   return new Promise((resolve, reject) => {
+    
     Papa.parse(csv, {
       header: false,
       skipEmptyLines: true,
@@ -174,7 +174,7 @@ const UploadForm = () => {
           id="schoolCsv"
           name="schoolCsv"
           type="file"
-          accept="csv"
+          accept=".csv"
           required
         />
         <p className="text-xs text-slate-400">

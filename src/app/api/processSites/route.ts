@@ -1,15 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
 import puppeteer from "puppeteer";
-import { Browser } from "puppeteer";
-import { promises as fs } from "fs";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-const WEBSITE_SCRAPE_TIMEOUT = 180000; // 3 minutes
 const OPENAI_RESPONSE_TIMEOUT = 300000; // 5 minutes
 
-var browser = await puppeteer.launch();
+let browser = await puppeteer.launch();
 
 async function scrapeWebsite(url: string) {
   if (!browser) {
@@ -158,18 +155,10 @@ async function processCoachesSite(coachesSite: string, assistantId: string) {
     } else {
       console.log("No response from the assistant.");
     }
-  } catch (error: any) {
+  } catch (error) {
     await browser.close();
-    console.error("An error occurred: ", error.message);
+    console.error("An error occurred: ", error);
     // Don't add the site to the processed set if there was a timeout error
-    if (
-      error.message === "Website scrape timed out" ||
-      error.message === "OpenAI response timed out"
-    ) {
-      console.log(`Skipping site due to timeout: ${coachesSite}`);
-    } else {
-      console.error(`Error processing site: ${coachesSite}`, error);
-    }
   }
 }
 
@@ -178,7 +167,7 @@ async function getCoachContacts(
   sport: string,
   gender: string
 ) {
-  var csv = "";
+  let csv = "";
 
   try {
     const schoolUrlArray = urlArray;
@@ -271,7 +260,7 @@ async function getCoachContacts(
               if (!coachData[0]){ // if the coach data is still empty after checking the full directory, then add an error row to the csv
                 csv += `SCRAPE_ERR,,,,,${schoolName}` + "\n"
               } else {
-                coachData.forEach((object: Record<string, any>) => {
+                coachData.forEach((object: Record<string, string>) => {
                   const values = headers.map((header: string) => object[header]);
                   csv += values.join(",") + "," + schoolName + "\n";
                 });
@@ -281,7 +270,7 @@ async function getCoachContacts(
             }
             
       } else if (coachData[0]["email"]){ // could make this more thorough, maybe check if all coach info is missing. 
-        coachData.forEach((object: Record<string, any>) => {
+        coachData.forEach((object: Record<string, string>) => {
           const values = headers.map((header: string) => object[header]);
           csv += values.join(",") + "," + schoolName + "\n"; // append the name of school based on the college of the current iteration
         });
@@ -289,9 +278,9 @@ async function getCoachContacts(
     }
 
     return csv;
-  } catch (error: any) {
+  } catch (error) {
     await browser.close();
-    console.error("an error occurred: ", error.message);
+    console.error("an error occurred: ", error);
   }
 }
 

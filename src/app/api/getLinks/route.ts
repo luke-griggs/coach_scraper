@@ -1,4 +1,3 @@
-import OpenAI from "openai";
 import { NextRequest, NextResponse } from "next/server";
 import puppeteer from "puppeteer-extra";
 

@@ -23,9 +23,6 @@ import { MdOutlineSportsHockey } from "react-icons/md";
 import { GiSoccerBall } from "react-icons/gi";
 import toast from "react-hot-toast"
 
-interface School{
-  school: string
-}
 
 async function getURLs(schoolArray: string[], sport: string, gender: string) : Promise<string[]>{
   const data = { schoolArray, sport, gender }
@@ -53,12 +50,12 @@ async function getCoachData(urls: Array<string>, sport: string, gender: string) 
     return response.json()
   } 
 
-async function sendCsv(csv: any){
+async function sendCsv(csvString: string){
 
     const response = await fetch("api/send", {
       method: "POST",
       headers: { "Content-Type": "text/plain"},
-      body: csv
+      body: csvString
     })
     const result = await response.json()
 
@@ -70,8 +67,7 @@ async function sendCsv(csv: any){
 
 }
 
-function parseCsv(csv: any, schoolsArray: string[]): Promise<void> {
-  csv.name
+function parseCsv(csv: File, schoolsArray: string[]): Promise<void> {
   return new Promise((resolve, reject) => {
     
     Papa.parse(csv, {
@@ -79,7 +75,7 @@ function parseCsv(csv: any, schoolsArray: string[]): Promise<void> {
       skipEmptyLines: true,
       complete: function (results) {
         const parsedArray = results.data as Array<Array<string>>
-        for (var i = 1; i < parsedArray.length; i++){ //start iteration at 1 to skip the header row
+        for (let i = 1; i < parsedArray.length; i++){ //start iteration at 1 to skip the header row
           schoolsArray.push(parsedArray[i][0]) // take the results from the parsed csv input and store them in the schoolsArray
         }
         toast.success('Form submitted successfully', {
@@ -127,16 +123,17 @@ async function handleSubmit(e: React.FormEvent<HTMLFormElement>){
 
   const formData = new FormData(e.currentTarget)
 
-  const schoolCsv = formData.get('schoolCsv')
+  const schoolCsv = formData.get('schoolCsv') as File
   const sportValue = formData.get('sport') as string
   const genderValue = formData.get('gender') as string
 
 
-  var formattedSchoolsArray: string[] = [] // stores the array of schools
+  let formattedSchoolsArray: string[] = [] // stores the array of schools
 
   try {
     // Parse CSV
     await parseCsv(schoolCsv, formattedSchoolsArray);
+    console.log("csv parsed")
 
     // Get URLs
     const urls = await getURLs(formattedSchoolsArray, sportValue, genderValue);

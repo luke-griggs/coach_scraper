@@ -45,10 +45,40 @@ async function scrapeWebsite(url: string) {
     return bodyText;
   } catch (error) {
     await page.close();
-    await browser.close();
-    throw error;
+    console.log("an error occurred while scraping")
+    return "error"
   }
 }
+
+async function urlHelper(schoolName: string) {
+  
+    const browser = await puppeteer.launch(); // Launch browser
+      const page = await browser.newPage();
+
+      const schoolDirectory = `${schoolName} athletic staff directory`;
+
+      try {
+        await page.goto(
+        `https://duckduckgo.com/?q=${encodeURIComponent(schoolDirectory)}`,
+          { waitUntil: "domcontentloaded", timeout: 60000 }
+        );
+
+        // Wait for search results to load
+        await page.waitForSelector('[data-testid="result-title-a"]');
+
+        // Grab the first result link
+        const directoryUrl = await page.evaluate(() => {
+            const result = document.querySelector('[data-testid="result-title-a"]'); // Select the first search result. use .querySelector('div#search a') for google
+            return result ? result.getAttribute("href") : "";   
+        });
+
+        await page.close(); 
+        await browser.close()
+        return directoryUrl        
+      } catch (error) {
+        console.error(error);
+      }
+    }
 
 async function processCoachesSite(coachesSite: string, assistantId: string) {
   if (!coachesSite) {
@@ -59,16 +89,12 @@ async function processCoachesSite(coachesSite: string, assistantId: string) {
   try {
     console.log(`Scraping website: ${coachesSite}...`);
     const startTime = Date.now();
-    const scrapedData = await Promise.race([
-      scrapeWebsite(coachesSite),
-      new Promise((_, reject) =>
-        setTimeout(
-          () => reject(new Error("Website scrape timed out")),
-          WEBSITE_SCRAPE_TIMEOUT
-        )
-      ),
-    ]);
+    const scrapedData = await scrapeWebsite(coachesSite)
+  
     const scrapeDuration = Date.now() - startTime;
+    if (scrapedData === "error") {
+      return "error";
+    }
     console.log(
       `Website scraped successfully in ${scrapeDuration / 1000} seconds.`
     );
@@ -128,8 +154,6 @@ async function processCoachesSite(coachesSite: string, assistantId: string) {
       extractedData.replace(/```json\n?|```/g, ""); // to get rid of the weird ``` that gpt was adding to responses
       console.log(extractedData);
 
-      const data = JSON.parse(extractedData)
-      if (data.first_name)
       return JSON.parse(extractedData);
     } else {
       console.log("No response from the assistant.");
@@ -219,26 +243,51 @@ async function getCoachContacts(
       "school",
     ];
     csv += headers.join(",") + "\n";
-    for (let i = 0; i < schoolUrlArray.length; i++) {
-      console.log("attempting to process site", schoolUrlArray[i]);
+    for (let i = 0; i < schoolUrlArray.length; i++) { // schoolUrlArray is an array of arrays so that we can keep track of the school name that corresponds to the link in case we need to scrape the full directory due to insufficient information
+      console.log("attempting to process site", schoolUrlArray[i][1]);
 
-      if (!schoolUrlArray[i]) {
+      if (!schoolUrlArray[i][1]) {
         console.log("this link was not found");
         break;
       }
-      const site = schoolUrlArray[i];
+      const site = schoolUrlArray[i][1];
+      const schoolName = schoolUrlArray[i][0];
 
       const coachData = await processCoachesSite(site, assistant.id);
 
-      //rescrape full athletic directory if 
-
-      coachData.forEach((object: Record<string, any>) => {
-        const values = headers.map((header: string) => object[header]);
-        csv += values.join(",") + "\n";
-      });
+      if (coachData == "error"){
+        csv += `SCRAPE_ERR,,,,,${schoolName}` + "\n"
+      }
+      
+      var missing_email_count = 0;
+      
+      for (const coach of coachData) {
+        if (!coach["email"]){
+          missing_email_count += 1
+        }
+      }
+  
+       if(!coachData[0] || missing_email_count > 1 || !coachData[0]["email"]) { // scrape full athletic directory if we don't get any data back or if more than 1 coach email is missing
+          console.log("insufficient info, scraping full directory for " + schoolName)
+          const url = await urlHelper(schoolName)
+            if (url) {
+              const coachData = await processCoachesSite(url, assistant.id);
+              coachData.forEach((object: Record<string, any>) => {
+                const values = headers.map((header: string) => object[header]);
+                csv += values.join(",") + "\n";
+              });
+            } else {
+              console.error("URL is undefined for school: " + schoolName);
+            }
+            
+      } else if (coachData[0]["email"]){ // could make this more thorough, maybe check if all coach info is missing. 
+        coachData.forEach((object: Record<string, any>) => {
+          const values = headers.map((header: string) => object[header]);
+          csv += values.join(",") + "\n";
+        });
+      }
     }
 
-    console.log("HERE IS THE CSV: " + csv);
     return csv;
   } catch (error: any) {
     await browser.close();

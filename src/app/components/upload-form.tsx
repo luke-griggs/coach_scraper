@@ -28,7 +28,6 @@ interface School{
   school: string
 }
 
-
 async function getURLs(schoolArray: string[], sport: string, gender: string) : Promise<string[]>{
   const data = { schoolArray, sport, gender }
 

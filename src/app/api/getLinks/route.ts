@@ -7,7 +7,7 @@ export async function POST(request: NextRequest) {
   const body = await request.text();
   const data = JSON.parse(body);
 
-  async function getUrls(schoolArray: Array<string>) {
+  async function getUrls() {
     const res = []; // Array to store results
     const browser = await puppeteer.launch(); // Launch browser
 
@@ -30,8 +30,8 @@ export async function POST(request: NextRequest) {
             return result ? result.getAttribute("href") : "";   
         });
 
-        res.push(firstLink); // Add the result to the array
-        console.log("First Link:", firstLink);
+        res.push([school, firstLink]); // Add the result to the array
+        console.log("Link for " + school + ": " + firstLink);
 
         await page.close(); // Close the browser
       } catch (error) {
@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
     return res; // Return the array of results
   }
 
-  const result = await getUrls(data);
+  const result = await getUrls();
 
   return NextResponse.json(result);
 }

@@ -128,7 +128,7 @@ async function handleSubmit(e: React.FormEvent<HTMLFormElement>){
   const genderValue = formData.get('gender') as string
 
 
-  let formattedSchoolsArray: string[] = [] // stores the array of schools
+  const formattedSchoolsArray: string[] = [] // stores the array of schools
 
   try {
     // Parse CSV

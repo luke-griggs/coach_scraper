@@ -244,7 +244,7 @@ async function getCoachContacts(
         csv += `SCRAPE_ERR,,,,,${schoolName}` + "\n"
       }
       
-      var missing_email_count = 0;
+      let missing_email_count = 0;
       
       for (const coach of coachData) {
         if (!coach["email"]){

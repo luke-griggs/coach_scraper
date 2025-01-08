@@ -23,8 +23,8 @@ export async function POST(request: NextRequest) {
 
     // Send the email
    await resend.emails.send({
-      from: 'Luke <luke@greenliink.com>',
-      to: 'lukegriggs100@gmail.com',
+      from: 'Luke <data@llluke.dev>',
+      to: 'support@d1scholarship.com',
       subject: 'Coach Data CSV',
       html: '<p>Attached is the coach data CSV!</p>',
       attachments: [

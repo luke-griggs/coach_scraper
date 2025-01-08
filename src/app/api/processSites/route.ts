@@ -156,6 +156,7 @@ async function processCoachesSite(coachesSite: string, assistantId: string) {
       console.log("No response from the assistant.");
     }
   } catch (error) {
+    console.log("error occurred, skipping site: ", error)
     return "error"
   }
 }

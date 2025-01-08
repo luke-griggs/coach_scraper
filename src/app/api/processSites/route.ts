@@ -261,7 +261,7 @@ async function getCoachContacts(
               } else {
                 coachData.forEach((object: Record<string, string>) => {
                   const values = headers.map((header: string) => object[header]);
-                  csv += values.join(",") + "," + schoolName + "\n";
+                  csv += values.join(",") + "," + `"${schoolName}"` + "\n";
                 });
               }             
             } else {
@@ -271,7 +271,7 @@ async function getCoachContacts(
       } else { 
         coachData.forEach((object: Record<string, string>) => {
           const values = headers.map((header: string) => object[header]);
-          csv += values.join(",") + "," + schoolName + "\n"; // append the name of school based on the college of the current iteration
+          csv += values.join(",") + "," + `"${schoolName}"` + "\n"; // append the name of school based on the college of the current iteration
         });
       }
     }

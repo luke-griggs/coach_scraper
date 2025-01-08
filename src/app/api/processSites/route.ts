@@ -156,9 +156,7 @@ async function processCoachesSite(coachesSite: string, assistantId: string) {
       console.log("No response from the assistant.");
     }
   } catch (error) {
-    await browser.close();
-    console.error("An error occurred: ", error);
-    // Don't add the site to the processed set if there was a timeout error
+    return "error"
   }
 }
 
@@ -257,7 +255,7 @@ async function getCoachContacts(
           const url = await urlHelper(schoolName)
             if (url) {
               const coachData = await processCoachesSite(url, assistant.id);
-              if (!coachData[0]){ // if the coach data is still empty after checking the full directory, then add an error row to the csv
+              if (coachData == "error" || !coachData[0]){ // if the coach data is still empty after checking the full directory, then add an error row to the csv
                 csv += `SCRAPE_ERR,,,,,${schoolName}` + "\n"
               } else {
                 coachData.forEach((object: Record<string, string>) => {

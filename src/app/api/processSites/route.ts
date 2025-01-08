@@ -269,7 +269,7 @@ async function getCoachContacts(
               console.error("URL is undefined for school: " + schoolName);
             }
             
-      } else if (coachData[0]["email"]){ // could make this more thorough, maybe check if all coach info is missing. 
+      } else { 
         coachData.forEach((object: Record<string, string>) => {
           const values = headers.map((header: string) => object[header]);
           csv += values.join(",") + "," + schoolName + "\n"; // append the name of school based on the college of the current iteration

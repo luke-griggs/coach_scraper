@@ -7,6 +7,7 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const OPENAI_RESPONSE_TIMEOUT = 300000; // 5 minutes
 
 let browser = await puppeteer.launch();
+let runningTasks = 0
 
 async function scrapeWebsite(url: string) {
   if (!browser) {
@@ -49,7 +50,6 @@ async function scrapeWebsite(url: string) {
 
 async function urlHelper(schoolName: string) {
   
-    const browser = await puppeteer.launch(); // Launch browser
       const page = await browser.newPage();
 
       const schoolDirectory = `${schoolName} athletic staff directory`;
@@ -70,7 +70,6 @@ async function urlHelper(schoolName: string) {
         });
 
         await page.close(); 
-        await browser.close()
         return directoryUrl        
       } catch (error) {
         console.error(error);
@@ -167,6 +166,7 @@ async function getCoachContacts(
   gender: string
 ) {
   let csv = "";
+  runningTasks += 1
 
   try {
     const schoolUrlArray = urlArray;
@@ -278,14 +278,17 @@ async function getCoachContacts(
 
     return csv;
   } catch (error) {
-    await browser.close();
     console.error("an error occurred: ", error);
   }
+  runningTasks -= 1
 }
 
 export async function POST(request: NextRequest) {
   const data = await request.json();
   const csv = await getCoachContacts(data.urls, data.sport, data.gender);
-  await browser.close();
+
+  if (runningTasks = 0){
+    await browser.close(); // only close the browser if this is the only task running
+  }
   return NextResponse.json(csv);
 }

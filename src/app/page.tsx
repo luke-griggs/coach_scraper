@@ -31,18 +31,14 @@ export default function DashboardPage() {
         <Card className="shadow-lg mb-4">
           <CardHeader>
             <CardTitle className="text-lg sm:text-xl">Get Started</CardTitle>
-            <CardDescription className="text-slate-400">
+            <CardDescription className="text-gray-700 dark:text-slate-400">
               Follow the steps below to scrape coach info
             </CardDescription>
           </CardHeader>
 
           <CardContent>
             <UploadForm />
-          </CardContent>
-
-          <CardFooter className="text-sm text-slate-400">
-            you&apos;ll receive the processed CSV to your email once complete.
-          </CardFooter>
+          </CardContent>        
         </Card>
         <ModeToggle />
       </main>

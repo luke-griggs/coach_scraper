@@ -6,8 +6,9 @@ import { Resend } from 'resend';
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(request: NextRequest) {
+  const randomId = "[id:" + Math.floor(1000 + Math.random() * 9000) + "]";
   const coachData = await request.text();
-  const filePath = path.join(process.cwd(), 'temp', 'coachData.csv');
+  const filePath = path.join(process.cwd(), 'temp', `${randomId}coachData.csv`);
 
 
   console.log("HERE IS THE COACH DATA: " + coachData)

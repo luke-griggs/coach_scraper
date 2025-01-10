@@ -6,6 +6,10 @@ export async function POST(request: NextRequest) {
   const body = await request.text();
   const data = JSON.parse(body);
 
+  async function delay(ms: number) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
   async function getUrls() {
     const res = []; // Array to store results
     const browser = await puppeteer.launch(); // Launch browser
@@ -36,6 +40,8 @@ export async function POST(request: NextRequest) {
       } catch (error) {
         console.error(error);
       }
+
+      await delay(1000);
     }
     browser.close()
     console.log("HERE ARE THE LINKS: " + res)

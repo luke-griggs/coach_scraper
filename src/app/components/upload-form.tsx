@@ -21,7 +21,6 @@ import { FaRunning } from "react-icons/fa";
 import { MdOutlineSportsHockey } from "react-icons/md";
 import { GiSoccerBall, GiTennisRacket, GiWaterPolo } from "react-icons/gi";
 import toast from "react-hot-toast";
-import { CardFooter } from "@/components/ui/card";
 
 interface Task {
   id: number;

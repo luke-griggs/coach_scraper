@@ -287,7 +287,7 @@ export async function POST(request: NextRequest) {
   const data = await request.json();
   const csv = await getCoachContacts(data.urls, data.sport, data.gender);
 
-  if (runningTasks = 0){
+  if (runningTasks == 0){
     await browser.close(); // only close the browser if this is the only task running
   }
   return NextResponse.json(csv);
